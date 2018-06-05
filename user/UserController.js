@@ -30,7 +30,7 @@ router.get('/', function (req, res) {
              str += ["Login - "+data[x].name , " ID - "+x , " Email - "+data[x].email]+"\n";
         }
         if(str == "")   return "Not Found";
-        return str.substring(0, str.length - 1);
+        return data;
       }
 
     database.ref('users').once('value',function(snapshot , err) {
