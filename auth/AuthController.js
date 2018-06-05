@@ -20,7 +20,7 @@ router.use(bodyParser.json());
 ПРИНИМАЕТ:
   *ФИО пользователя
   *Email пользователя
-  *Пароль пользователя
+  *Пароль пользователя -
 
 ВОЗВРАЩАЕТ:
   *токен на 24 часа
@@ -28,24 +28,33 @@ router.use(bodyParser.json());
 */
 router.post('/register', function(req, res) {
 
+  var keyNew = database.ref().push().key;
   console.log(req.body.name);
   var hashedPassword = bcrypt.hashSync(req.body.password, 8);
   var data = {
     name : req.body.name,
     email : req.body.email,
-    password : hashedPassword
+    password : hashedPassword,
+    access: 0,
+    phone: req.body.phone,
+    token: keyNew,
+    id: 100000000,
+    count_visit: 0,
+    count_buy : 0,
+    date : 0,
+    sum : 0
   }
-  var keyNew = database.ref().push().key;
+  
   console.log(keyNew);
   database.ref('users/' + keyNew).set(data,function (err, user) {
       
       if (err) return res.status(500).send("There was a problem registering the user.")
 
       // create a token
-      var token = jwt.sign({ id: keyNew}, config.secret, {
-        expiresIn: 86400 // expires in 24 hours
-      });
-      res.status(200).send({ auth: true, token: token });
+      // var token = jwt.sign({ id: keyNew}, config.secret, {
+      //   expiresIn: 86400 // expires in 24 hours
+      // });
+      res.status(200).send({ auth: true, token: keyNew });
     });
 
   /*
@@ -124,18 +133,17 @@ router.post('/register', function(req, res) {
       }
       return "Not Found";
     }
-    
+    //ПЕРЕДЕЛАТЬ
     database.ref('users').once('value',function(snapshot , err) {
       var user = getUser(snapshot.val() , req.body.email)
       console.log(user);
-      console.log("конитель");
       if (err) return res.status(500).send('Error on the server.');
       if (user === "Not Found") return res.status(404).send('No user found.');
       var passwordIsValid = bcrypt.compareSync(req.body.password, user[2]);      
       console.log(passwordIsValid);
       
       if (!passwordIsValid) return res.status(401).send({ auth: false, token: null });
-  
+     //УБРАТЬ ТОКЕН
       var token = jwt.sign({ id: user[1]}, config.secret, {
         expiresIn: 86400 // expires in 24 hours
       });
