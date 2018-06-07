@@ -5,9 +5,9 @@ var bodyParser = require('body-parser');
 router.use(bodyParser.urlencoded({ extended: false }));
 router.use(bodyParser.json());
 
-var firebase = require('firebase');
-var storageRef = firebase.storage().ref('images');
-var database = firebase.database();
+ var firebase = require('firebase');
+// var storageRef = firebase.storage().ref('images');
+// var database = firebase.database();
 
 /*
 Создает новую акцию(POST)
