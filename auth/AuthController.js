@@ -150,17 +150,19 @@ database.ref('users').once('value',function(snapshot , err) {
       }
       return "Not Found";
     }
+    
     database.ref('users').once('value',function(snapshot , err) {
-      var user = getUser(snapshot.val() , req.body.email)
+      var email = req.body.email.replace(' ','');
+      var user = getUser(snapshot.val() , email);
       console.log(user);
       if (err) return res.status(500).send('Error on the server.');
       if (user === "Not Found") return res.status(404).send('No user found.');
-      var passwordIsValid = bcrypt.compareSync(req.body.password, user[2]);      
+      var passwordIsValid = bcrypt.compareSync(req.body.password, user[2]);   //исправить    
       console.log(passwordIsValid);
       
       if (!passwordIsValid) return res.status(401).send({ auth: false });
 
-      res.status(200).send({ auth: true , user: snapshot.val()[user[1]]});
+      res.status(200).send({ auth: true , user: user[1]});
     }/*,
     function(err){
       console.log("конитель");
