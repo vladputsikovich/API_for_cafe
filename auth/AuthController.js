@@ -6,12 +6,11 @@ var bcrypt = require('bcryptjs');
 var config = require('../config');
 var firebase = require('firebase');
 var database = firebase.database();
-//var ref = database.ref('users');
+var crypto = require('crypto');
 
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 
-//var User = require('../user/User');
 
 
 /*
@@ -27,35 +26,52 @@ router.use(bodyParser.json());
   *статус что пользователь успешно авторизован
 */
 router.post('/register', function(req, res) {
-
-  var keyNew = database.ref().push().key;
-  console.log(req.body.name);
-  var hashedPassword = bcrypt.hashSync(req.body.password, 8);
-  var data = {
-    name : req.body.name,
-    email : req.body.email,
-    password : hashedPassword,
-    access: 0,
-    phone: req.body.phone,
-    token: keyNew,
-    id: 100000000,
-    count_visit: 0,
-    count_buy : 0,
-    date : 0,
-    sum : 0
+ //
+ //НАДО ПРОВЕРЯТЬ ЗАРЕГАН ЛИ ТАКОЙ EMAIL
+ //
+ function getUser(data, email){
+  for(var x in data){
+    if(data[x].email && data[x].email.split(",").indexOf(email.toString())!=-1) {
+      return  true;
+    }
   }
-  
-  console.log(keyNew);
-  database.ref('users/' + keyNew).set(data,function (err, user) {
-      
-      if (err) return res.status(500).send("There was a problem registering the user.")
+  return false;
+}
+database.ref('users').once('value',function(snapshot , err) {
+  var checkEmail = getUser(snapshot.val() , req.body.email);
+  console.log(checkEmail);
+  if(checkEmail) 
+  {
+    res.status(500).send("Такой email уже есть");
+  }
+  else
+  {
+    var keyNew = database.ref().push().key;
+    var _id = crypto.randomBytes(10).toString('hex');
+    var hashedPassword = bcrypt.hashSync(req.body.password, 8);
+    var data = {
+      name : req.body.name,
+      email : req.body.email,
+      password : hashedPassword,
+      access: 3,
+      phone: req.body.phone,
+      token: keyNew,
+      id: _id,
+      count_visit: 0,
+      count_buy : 0,
+      date : 0,
+      sum : 0
+    }
+    console.log(keyNew);
+    database.ref('users/' + keyNew).set(data,function (err, user) {
+        if (err)  res.status(500).send("There was a problem registering the user.")
+        res.status(200).send({ auth: true, token: keyNew });
+      });
+  }
+})
 
-      // create a token
-      // var token = jwt.sign({ id: keyNew}, config.secret, {
-      //   expiresIn: 86400 // expires in 24 hours
-      // });
-      res.status(200).send({ auth: true, token: keyNew });
-    });
+
+  
 
   /*
     var hashedPassword = bcrypt.hashSync(req.body.password, 8);
@@ -125,6 +141,7 @@ router.post('/register', function(req, res) {
 */
 
   router.post('/login', function(req, res) {
+  
    function getUser(data, email){
       for(var x in data){
         if(data[x].email && data[x].email.split(",").indexOf(email.toString())!=-1) {
@@ -133,7 +150,6 @@ router.post('/register', function(req, res) {
       }
       return "Not Found";
     }
-    //ПЕРЕДЕЛАТЬ
     database.ref('users').once('value',function(snapshot , err) {
       var user = getUser(snapshot.val() , req.body.email)
       console.log(user);
@@ -142,12 +158,9 @@ router.post('/register', function(req, res) {
       var passwordIsValid = bcrypt.compareSync(req.body.password, user[2]);      
       console.log(passwordIsValid);
       
-      if (!passwordIsValid) return res.status(401).send({ auth: false, token: null });
-     //УБРАТЬ ТОКЕН
-      var token = jwt.sign({ id: user[1]}, config.secret, {
-        expiresIn: 86400 // expires in 24 hours
-      });
-      res.status(200).send({ auth: true, token: token });
+      if (!passwordIsValid) return res.status(401).send({ auth: false });
+
+      res.status(200).send({ auth: true , user: snapshot.val()[user[1]]});
     }/*,
     function(err){
       console.log("конитель");
