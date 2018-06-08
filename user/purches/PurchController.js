@@ -95,5 +95,4 @@ router.get('/:id', function (req, res) {
     });
 });
 
-//4.Дописать документацию
 module.exports = router;    

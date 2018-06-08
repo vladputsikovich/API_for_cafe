@@ -105,7 +105,16 @@ database.ref('users').once('value',function(snapshot , err) {
   *Данные о пользователе
 */
   router.get('/me', function(req, res) {
-    
+
+    var token = req.headers['x-access-token'];
+    if (!token) return res.status(401).send({ auth: false, message: 'No token provided.' });
+    console.log(token);
+    database.ref('users').child(token).on("value", function(snapshot) {
+            var us = snapshot.val();
+            console.log("USER " + us);
+            res.status(200).send({ auth: true , user: us});
+      });
+    /*
     var token = req.headers['x-access-token'];
 
     if (!token) return res.status(401).send({ auth: false, message: 'No token provided.' });
@@ -123,7 +132,7 @@ database.ref('users').once('value',function(snapshot , err) {
         var us = snapshot.val();
         console.log("name: " + us);
       });
-    });
+    });*/
   });
 
 /*
