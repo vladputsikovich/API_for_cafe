@@ -150,6 +150,11 @@ database.ref('users').once('value',function(snapshot , err) {
 */
 
   router.post('/login', function(req, res) {
+
+    res.append('Access-Control-Allow-Origin', ['*']);
+    res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    es.append('Access-Control-Allow-Headers', 'Content-Type');
+
   
    function getUser(data, email){
       for(var x in data){
