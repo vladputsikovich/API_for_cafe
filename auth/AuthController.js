@@ -26,9 +26,11 @@ router.use(bodyParser.json());
   *статус что пользователь успешно авторизован
 */
 router.post('/register', function(req, res) {
- //
- //НАДО ПРОВЕРЯТЬ ЗАРЕГАН ЛИ ТАКОЙ EMAIL
- //
+
+  res.append('Access-Control-Allow-Origin', ['*']);
+  res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+  res.append('Access-Control-Allow-Headers', 'Content-Type');
+
  function getUser(data, email){
   for(var x in data){
     if(data[x].email && data[x].email.split(",").indexOf(email.toString())!=-1) {
@@ -48,19 +50,20 @@ database.ref('users').once('value',function(snapshot , err) {
   {
     var keyNew = database.ref().push().key;
     var _id = crypto.randomBytes(10).toString('hex');
-    var hashedPassword = bcrypt.hashSync(req.body.password, 8);
+    //var hashedPassword = bcrypt.hashSync(req.body.password, 8);
     var data = {
       name : req.body.name,
       email : req.body.email,
-      password : hashedPassword,
-      access: 3,
+      password : req.body.password,
+      access: req.body.access,
       phone: req.body.phone,
       token: keyNew,
       id: _id,
       count_visit: 0,
       count_buy : 0,
       date : 0,
-      sum : 0
+      sum : 0,
+      banned: false
     }
     console.log(keyNew);
     database.ref('users/' + keyNew).set(data,function (err, user) {
@@ -70,8 +73,6 @@ database.ref('users').once('value',function(snapshot , err) {
   }
 })
 
-
-  
 
   /*
     var hashedPassword = bcrypt.hashSync(req.body.password, 8);
@@ -171,7 +172,9 @@ database.ref('users').once('value',function(snapshot , err) {
       console.log(user);
       if (err) return res.status(500).send('Error on the server.');
       if (user === "Not Found") return res.status(404).send('No user found.');
-      var passwordIsValid = bcrypt.compareSync(req.body.password, user[2]);   //исправить    
+      //var passwordIsValid = bcrypt.compareSync(req.body.password, user[2]);   //исправить    
+      var passwordIsValid = false; 
+      if(req.body.password == user[2]) passwordIsValid = true
       console.log(passwordIsValid);
       
       if (!passwordIsValid) return res.status(401).send({ auth: false });

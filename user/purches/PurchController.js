@@ -22,6 +22,10 @@ var database = firebase.database();
 */
 router.post('/new', function(req, res) {
 
+  res.append('Access-Control-Allow-Origin', ['*']);
+  res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+  res.append('Access-Control-Allow-Headers', 'Content-Type');
+
   function UpdateData(id , sum){
 
       function getUser(data, id){
@@ -37,7 +41,7 @@ router.post('/new', function(req, res) {
         //res.status(200).send({user: snapshot.val()[user[1]]});
         database.ref('users/' + user[3]).update({
           sum: Number(user[2]) + Number(sum),
-          count_buy: Number(user[0]) + 1,
+          count_buy: Number(user[0]) + req.body.buys,
           count_visit: Number(user[1]) + 1,
           date: new Date().toLocaleString("ru")
         }, function(error) {
