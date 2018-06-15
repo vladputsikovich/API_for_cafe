@@ -7,56 +7,53 @@ router.use(bodyParser.json());
 
  var firebase = require('firebase');
 // var storageRef = firebase.storage().ref('images');
-// var database = firebase.database();
+var database = firebase.database();
 
 /*
 Создает новую акцию(POST)
 
 ПРИНИМАЕТ:
-  *Дату проведения акции
-  *Заголовок
+  *Название кафе
+  *Адресс
   *Описание
   *URL Картинки
-  *Кафе которое проводит акцию
 
 ВОЗВРАЩАЕТ:
   *Ответ успешно ли добавилась информация о акции
 */
 router.post('/new', function(req, res) {
-  
-    res.status(200).send(req.body);
     var keyNew = database.ref().push().key;
     var data = {
-      date : req.body.date,
+      name : req.body.name,
       description: req.body.description,
-      header : req.body.header,
+      adress : req.body.adress,
       pictureURL : req.body.pictureURL,
-      cafe : req.body.cafe
+      users : 0
     }
-    database.ref(req.body.cafe +'/stock/' + keyNew).set(data,function (err) {
-      if (err) return res.status(500).send({error : err})
+    database.ref('cafe/' + keyNew).set(data,function (err) {
+      if (err) return res.status(500).send({add:false})
       res.status(200).send({add:true});
     });
 });
 
-//ВОЗВРАЩАЕТ ВСЕ АКЦИИ
+//ВОЗВРАЩАЕТ ВСЕ КАФЕ
 router.get('/', function (req, res) {
-  database.ref('stock').once('value',function(snapshot , err) {
-      if (err)  res.status(500).send('Error on the server.');
-      res.status(200).send(snapshot.val());
+  database.ref('cafe').once('value',function(snapshot , err) {
+      if (err)  res.status(500).send({error:err});
+      res.status(200).send({data:snapshot.val()});
   });
 });
 
-//ВОЗВРАЩАЕТ ОТДЕЛЬНУЮ АКЦИЮ
+//ВОЗВРАЩАЕТ ОТДЕЛЬНОЕ КАФЕ ПО ID
 
 router.get('/:id', function (req, res) {
   var str = [];
-  function getPurch(data, id){
+  function getCafe(data, id){
     for(var x in data){
       if(data[x].id && data[x].id.split(",").indexOf(id.toString())!=-1) {
-        var date = data[x].date;
-        var sum = data[x].sum;
-        JSON.stringify(str.push({x ,sum , date }));
+        var name = data[x].name;
+        var adress = data[x].adress;
+        JSON.stringify(str.push({x ,name , adress }));
       }
     }
     if(str != []) return str;
@@ -64,17 +61,17 @@ router.get('/:id', function (req, res) {
   }
 
   var id = req.headers['x-id'];
-  database.ref('purches').on("value", function(snapshot) {
-          var us = getPurch(snapshot.val(),id) ;
+  database.ref('cafe').on("value", function(snapshot) {
+          var us = getCafe(snapshot.val(),id) ;
           if(us == "Not Found") res.status(500).send({err : "Not found"});
-          res.status(200).send(us);
+          res.status(200).send({data:us});
     });
 });
 
 // УДАЛЯЕТ АКЦИЮ ПО ID
 
 router.delete('/:id', function (req, res) {
-  firebase.database().ref('/stock/' + req.body.id)
+  firebase.database().ref('cafe/' + req.body.id)
       .remove()
       .then(() => {
         res.status(200).send({deleted:true});
@@ -87,7 +84,7 @@ router.delete('/:id', function (req, res) {
       )
 });
 
-// ИЗМЕНЯЕТ АКЦИЮ ПО ID
+// ИЗМЕНЯЕТ КАфЕ ПО ID
 router.put('/:id', function (req, res) {
   
   firebase.database().ref('stock/' + req.body.id).update({

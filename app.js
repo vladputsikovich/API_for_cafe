@@ -14,5 +14,7 @@ app.use('/purches', PurchController);
 var StockController = require('./user/stock/StockController');
 app.use('/stock', StockController);
 
+var StockController = require('./cafe/CafeController');
+app.use('/cafe', StockController);
 
 module.exports = app;

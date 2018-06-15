@@ -39,12 +39,11 @@ router.post('/register', function(req, res) {
   }
   return false;
 }
-database.ref('users').once('value',function(snapshot , err) {
+database.ref(req.body.cafe +'/'+ 'users').once('value',function(snapshot , err) {
   var checkEmail = getUser(snapshot.val() , req.body.email);
-  console.log(checkEmail);
   if(checkEmail) 
   {
-    res.status(500).send("Такой email уже есть");
+    res.status(500).send({checkEmail:false});//изменить
   }
   else
   {
@@ -59,10 +58,11 @@ database.ref('users').once('value',function(snapshot , err) {
       phone: req.body.phone,
       token: keyNew,
       id: _id,
-      count_visit: 0,
-      count_buy : 0,
-      date : 0,
-      sum : 0,
+      //count_visit: 0,
+      //count_buy : 0,
+      //date : 0,
+      //sum : 0,
+      cafes: 0,
       banned: false
     }
     console.log(keyNew);
@@ -160,7 +160,7 @@ database.ref('users').once('value',function(snapshot , err) {
    function getUser(data, email){
       for(var x in data){
         if(data[x].email && data[x].email.split(",").indexOf(email.toString())!=-1) {
-          return [data[x].name , x , data[x].password];
+          return [data[x].name , x , data[x].password , data[x].access];
         }
       }
       return "Not Found";
@@ -179,7 +179,7 @@ database.ref('users').once('value',function(snapshot , err) {
       
       if (!passwordIsValid) return res.status(401).send({ auth: false });
 
-      res.status(200).send({ auth: true , user: user[1]});
+      res.status(200).send({ auth: true , user: user[1] , access: user[3]});
     }/*,
     function(err){
       console.log("конитель");
